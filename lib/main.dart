@@ -23,8 +23,10 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     FirebaseAuth.instance.userChanges().listen((User? user) {
       if (user == null) {
+        // ignore: avoid_print
         print('User is currently signed out!');
       } else {
+        // ignore: avoid_print
         print('User is signed in!');
       }
     });
@@ -38,7 +40,7 @@ class _MyAppState extends State<MyApp> {
       home:
           (FirebaseAuth.instance.currentUser != null &&
                   FirebaseAuth.instance.currentUser!.emailVerified)
-              ? WelcomeScreen()
+              ? Login()
               :Login(),
       routes: {
         "login": (context) => Login(),

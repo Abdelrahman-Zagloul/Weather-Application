@@ -20,14 +20,21 @@ class _WeatherHomePage2State extends State<HomeScreen> {
   String description = "";
   double lat = 0.0;
   double lon = 0.0;
+  bool isLoading = false;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    fetchWeather(city);
+    fetchWeather(city); 
   }
 
   Future<void> fetchWeather(String cityName) async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     final url =
         'https://api.openweathermap.org/data/2.5/weather?q=$cityName&appid=86d9ee800e0e82e5c5221611e2d00981&units=metric';
 
@@ -43,12 +50,19 @@ class _WeatherHomePage2State extends State<HomeScreen> {
           city = data['name'];
           lat = data['coord']['lat'];
           lon = data['coord']['lon'];
+          isLoading = false;
         });
       } else {
-        print("Failed to fetch weather");
+        setState(() {
+          isLoading = false;
+          errorMessage = "Failed to fetch weather data. Please try again.";
+        });
       }
     } catch (e) {
-      print("Error fetching weather: $e");
+      setState(() {
+        isLoading = false;
+        errorMessage = "Error fetching weather: $e";
+      });
     }
   }
 
@@ -63,7 +77,6 @@ class _WeatherHomePage2State extends State<HomeScreen> {
         (route) => false,
       );
     } catch (e) {
-      print("Error signing out: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error signing out: $e")),
       );
@@ -86,66 +99,76 @@ class _WeatherHomePage2State extends State<HomeScreen> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1F0C4D), Color(0xFF693E99)],
-          ),
-        ),
+  decoration: const BoxDecoration(
+    gradient: LinearGradient( 
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFF1F0C4D), Color(0xFF693E99)],
+    ),
+  
+  // باقي الكود زي ما هو
+),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                // Removed the Row containing time and status icons
-                const SizedBox(height: 20),
                 Image.asset('image/weather_header.png', height: 120),
                 const SizedBox(height: 10),
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            city,
-                            style: const TextStyle(
-                              fontSize: 40,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : errorMessage != null
+                        ? Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Text(
+                              errorMessage!,
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : Container(
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              children: [
+                                Text(
+                                  city,
+                                  style: const TextStyle(
+                                    fontSize: 40,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '${temperature.round()}°',
+                                  style: const TextStyle(
+                                    fontSize: 35,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  description,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Max: ${maxTemp.round()}°   Min: ${minTemp.round()}°',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            '${temperature.round()}°',
-                            style: const TextStyle(
-                              fontSize: 35,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        description,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 20,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Max: ${maxTemp.round()}°   Min: ${minTemp.round()}°',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 10),
                 Column(
                   children: [
@@ -258,11 +281,19 @@ class _WeatherHomePage2State extends State<HomeScreen> {
                                     top: Radius.circular(8),
                                   ),
                                 ),
+                                isScrollControlled: true,
                                 builder: (context) {
                                   final TextEditingController cityController =
                                       TextEditingController();
                                   return Padding(
-                                    padding: const EdgeInsets.all(20),
+                                    padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context)
+                                          .viewInsets
+                                          .bottom,
+                                      left: 20,
+                                      right: 20,
+                                      top: 20,
+                                    ),
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -294,31 +325,28 @@ class _WeatherHomePage2State extends State<HomeScreen> {
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
                                               horizontal: 16,
+                                              vertical: 12,
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            String newCity =
-                                                cityController.text.trim();
+                                          onSubmitted: (value) {
+                                            String newCity = value.trim();
                                             if (newCity.isNotEmpty) {
                                               Navigator.pop(context);
                                               fetchWeather(newCity);
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      "Please enter a city name"),
+                                                ),
+                                              );
                                             }
                                           },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                Colors.deepPurpleAccent,
-                                          ),
-                                          child: const Text(
-                                            'Search',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                            ),
-                                          ),
+                                          autofocus: true,
+                                          textInputAction: TextInputAction.search,
                                         ),
+                                        const SizedBox(height: 20),
                                       ],
                                     ),
                                   );
